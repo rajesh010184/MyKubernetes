@@ -72,3 +72,18 @@ Rolling update and Rollbacks
  kubectl rollout status deployment mydeployment
  kubectl rollout history deployment mydeployment
  kubectl rollout undo deployment mydeployment
+
+
+Networking In kubernetes
+Basic Networking
+ip link -- List and modify interfaces
+ip addr -- Check ip address.
+ip addr add 192.168.1.2/24 dev etho -- To add ip adress.
+ip route -- To Check routes
+ip route add 192.1681.0.24 via 192.168.2.1 -- To add route
+
+Basic of DNS
+arp 
+route
+
+
