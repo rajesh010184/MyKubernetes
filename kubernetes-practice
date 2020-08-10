@@ -1,0 +1,106 @@
+## Upgrading the kubernetes cluster
+
+  kubeadm upgrade plan v1.12.0
+  apt-get upgrade -y kubeadm=1.12.0--00
+  kubeadm upgrade apply v1.12.0
+  kubectl get nodes
+
+  upgrade kubelet
+  apt-get upgrade kubelet=1.12.0-00
+
+  kubectl get nodes
+
+  To upgrade worker nodes
+  kubectl drain node01 --ignore-daemonsets
+  apt-get upgrade -y kubeadm=1.12.0-00
+  apt-get upgrade -y kubelet=1.12.0-00
+  kubeadm upgrade node config --kubelet-version v1.12.0
+  systemctl restart kubelet
+  kubectl uncordon node01
+
+
+
+  ####Kubernetes:
+  operssl x509 -i /etc/kubernetes/pki/apiserver.crt -text -noout   --- To get details about certificates.
+  Same we can check for all certificates.
+
+
+  To check the service issue.
+  journalctl -u etcd.service -l
+
+  kubectl logs etcd-master -- To check logs of pod
+  
+  To check logs of pods 
+  docker ps -a
+  docker logs <container id> 
+
+  kubectl api-resources -- To check resources
+  
+  kubectl get clusterroles --no-headers | wc -l  -- To check no of clusterroles
+
+
+  systemctl status kubelet.service -l -- To check kubelet serveice status
+
+  #### Most Importent
+
+  1)  Use JSON PATH query to retrieve the osImages of all the  nodes and store it in a file /opt/outputs/nodes_os_x43kj56.txt
+
+   Ans: kubectl get nodes -o jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/nodes_os_x43kj56.txt
+
+ 2) Get the list of all nodes in json format
+   kubectl get nodes -o json > pods.json
+
+
+ 3) Create a new deployment called nginx-deploy, with image nginx:1.16 and 1 replica. Record the version. Next upgrade the deployment to version 1.17 using rolling update. Make sure that the version upgrade is recorded in the resource annotation.
+ Ans:
+ kubectl create deployment nginx-deploy --image=nginx:1.16 --record
+ kubectl rollout history deployment nginx-deploy -- To check recorded.
+ 
+ kubectl set image deployment nginx-deploy nginx-deploy=nginx:1.17 --record
+ 
+ kubectl get deployment nginx-deploy | grep image -- to check image version
+
+ kubectl rollout history deployment nginx-deploy
+
+ 4) Create a new user called john. Grant him access to the cluster. John should have permission to create, list, get, update and delete pods in the development namespace . The private key exists in the location: /root/john.key and csr at /root/john.csr
+
+ Ans:
+ kubectl api-version | grep certificate -- To check api version
+
+ step 1) create john.yaml for csr
+ apiVersion: certificates.k8s.io/v1beta1
+ kind: CertificateSigningRequest
+ metadata:
+  name: john
+spec:
+  groups:
+  - system:authenticated
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1ZqQ0NBVDRDQVFBd0VURVBNQTBHQTFVRUF3d0dZVzVuWld4aE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQVE4QU1JSUJDZ0tDQVFFQTByczhJTHRHdTYxakx2dHhWTTJSVlRWMDNHWlJTWWw0dWluVWo4RElaWjBOCnR2MUZtRVFSd3VoaUZsOFEzcWl0Qm0wMUFSMkNJVXBGd2ZzSjZ4MXF3ckJzVkhZbGlBNVhwRVpZM3ExcGswSDQKM3Z3aGJlK1o2MVNrVHF5SVBYUUwrTWM5T1Nsbm0xb0R2N0NtSkZNMUlMRVI3QTVGZnZKOEdFRjJ6dHBoaUlFMwpub1dtdHNZb3JuT2wzc2lHQ2ZGZzR4Zmd4eW8ybmlneFNVekl1bXNnVm9PM2ttT0x1RVF6cXpkakJ3TFJXbWlECklmMXBMWnoyalVnald4UkhCM1gyWnVVV1d1T09PZnpXM01LaE8ybHEvZi9DdS8wYk83c0x0MCt3U2ZMSU91TFcKcW90blZtRmxMMytqTy82WDNDKzBERHk5aUtwbXJjVDBnWGZLemE1dHJRSURBUUFCb0FBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBR05WdmVIOGR4ZzNvK21VeVRkbmFjVmQ1N24zSkExdnZEU1JWREkyQTZ1eXN3ZFp1L1BVCkkwZXpZWFV0RVNnSk1IRmQycVVNMjNuNVJsSXJ3R0xuUXFISUh5VStWWHhsdnZsRnpNOVpEWllSTmU3QlJvYXgKQVlEdUI5STZXT3FYbkFvczFqRmxNUG5NbFpqdU5kSGxpT1BjTU1oNndLaTZzZFhpVStHYTJ2RUVLY01jSVUyRgpvU2djUWdMYTk0aEpacGk3ZnNMdm1OQUxoT045UHdNMGM1dVJVejV4T0dGMUtCbWRSeEgvbUNOS2JKYjFRQm1HCkkwYitEUEdaTktXTU0xMzhIQXdoV0tkNjVoVHdYOWl4V3ZHMkh4TG1WQzg0L1BHT0tWQW9FNkpsYWFHdTlQVmkKdjlOSjVaZlZrcXdCd0hKbzZXdk9xVlA3SVFjZmg3d0drWm89Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  usages:
+  - client auth
+EOF
+
+
+kubectl create role developer --resource-pod --verb=create,list,get,update,delete --namespace=developement
+
+kubectl create rolebinding developer-role-binding --role=developer --user=john --namespace=developement 
+
+To check..
+kubectl auth can-i update pods as-john -n developement
+
+kubectl auth can-i delete pods as-john -n developement
+
+5) Create an nginx pod called nginx-resolver using image nginx, expose it internally with a service called nginx-resolver-service. Test that you are able to look up the service and pod names from within the cluster. Use the image: busybox:1.28 for dns lookup. Record results in /root/nginx.svc and /root/nginx.pod.
+
+kubectl run nginx-resolver --image=nginx 
+
+kubectl expose pod nginx-resolver --name=nginx-resolver-service --port=80
+
+kubectl describe svc nginx-resolver-service
+kubectl get svc
+kubectl run busybox --image=busybox:1.28 
+
+kubectl exec -it busybox nslookup nginx-resolver-service > /root/nginx.svc
+
+kubectl get pod -o wide --to get ip of pod which is 10.32.0.5
+kubectl exec -it busybox nslookup 10-32-0-5.default.pod > /root/nginx.pod
