@@ -1,0 +1,10 @@
+kubectl run nginx --image=nginx
+kubectl create deployment nginx --image=nginx:1.16
+kubectl scale deployment nginx --replicas=5
+kubectl set image deployment nginx nginx=nginx:1.17 --record --To record
+kubectl expose deployment nginx --port=80
+kubectl edit deployment nginx
+kubectl create -f nginx.yaml
+kubectl delete -f nginx.yaml
+kubectl replace -f nginx.yaml
+kubectl apply -f nginx.yaml
