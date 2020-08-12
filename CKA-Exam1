@@ -1,0 +1,454 @@
+Question 1:
+Taints
+
+List all the nodes in the cluster and check which do not contain any non-scheduling and not-reachable node. 
+Write the output to /opt/nodes.txt
+Ans: kubectl get nodes | grep  Ready -o wide > /opt/nodes.txt
+
+Question 2: 
+Static Pods
+
+Create a static pod on the worker node. The name should be kplabs-static and it should be launched from the nginx image.
+Ans:
+kubectl run kplabs-static --image= nginx --dry-run=client -o yaml > kplabs-static.yaml
+check staticPodPath:
+ps -aux |grep kubelet
+vi /var/lib/config.xml
+cp kplabs-static.yaml /etc/kubernetes/manifests/
+
+Question 3: Skipped
+Toleration:
+Create a deployment named kplabs-tolerate. 
+The deployment should be launched from nginx image and it should tolerate the taint of mykey:myvalue:Noschedule. 
+Create 6 replicas of the deployment.
+Ans:
+kubectl create deployment kplabs-tolerate --image=nginx --dry-run=client -o yaml > kplabs-tolerate.yaml
+kubectl scale deployment kplabs-tolerate --replicas=6
+Add tolerations:
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+
+    name: kplabs-tolerate
+
+spec:
+
+   template:
+
+       metadata:
+
+        name: kplabs-tolerate
+
+        labels:
+
+          run: pod
+
+       spec:
+
+         tolerations:
+
+            - key: mykey
+
+              operator: Equal
+
+              value: myvalue
+
+              effect: NoSchedule
+
+         containers:
+
+           - name: nginx
+
+             image: nginx
+
+   replicas: 6
+
+   selector:
+
+      matchLabels:
+
+         run: pod
+         
+     kubectl create -f kplabs-tolerate.yaml
+     
+     
+Question 4: 
+Taints
+Add a taint to one of the worker node where key is mykey, value is myvalue and effect should be NoSchedule
+Ans: 
+kubectl taint node node01 mykey=myvalue:NoSchedule
+
+Question 5:
+Persistent Volume:
+List all persistent volumes sorted by capacity, saving the full kubcet1 output in text file path (given in exam)
+Ans:
+kubectl get pv --sort-by=space.capacity.storage > tmp/pv.txt
+
+Question 6:
+DaemonSet
+Create single instance of pod on every node (i.e. daemonset). do not alter taints on node. 
+Ans:
+Create a yaml file as below
+
+apiVersion: apps/v1
+
+kind: DaemonSet
+
+metadata:
+
+    name: daemon-set
+
+spec:
+
+   template:
+
+       metadata:
+
+        name: daemon-set-pod
+
+        labels:
+
+          run: pod
+
+       spec:
+
+         containers:
+
+           - name: daemon-set
+
+             image: nginx
+
+   selector:
+
+      matchLabels:
+
+         run: pod
+         
+
+Question 7:
+Deployment
+
+Create a deployment as follows 
+
+    • Name ngnix-app 
+
+    • Using container ngnix with version 1.11.10-alpine 
+
+    • The deployment should contain 3 replicas 
+
+    Next, deploy the application with new version 1.13.0-alpine, by performing a rolling update, 
+
+    and record that update 
+
+    Finally, rollback that update to the previous version 1.11.10-alpine 
+Ans: 
+kubectl create deployment nginx-app --image=nginx:1.11.10-alpine 
+kubectl scale deployment nginx-app --replicas=3
+Now upgrade:
+kubectl set image deployment nginx-app nginx:1.11.10-alpine=nginx:1.13.0-alpine --record
+again rollout 
+kubectl rollout deployment nginx-app --to-version=1
+
+Question 8:
+Service:
+Create and configure the service front-end-service so its accessible through ClusterIP and routes to the existing pod named front-end.
+Ans:
+kubectl expose pod front-end --name=front-end-service --port=8080
+
+Question 9:
+Scaling:
+Scale the deployment web-server to 3 pods.
+Ans:
+kubectl scale deployment web-server --replicas=3
+
+Question 10:
+Taint:
+Check to see how many nodes are ready (not including nodes tainted Nonscheduled) and write the number to file name_of_file_given_in_question
+Ans:
+kubectl get nodes | grep Ready > /opt/file.txt
+
+Question 11:
+Metrics Server:
+Find pods running high CPU workloads and write the name of the pod consuming most CPU to the file name_of_file_given_in_question.
+Ans:
+kubectl top pods --all-namespaces | sort --reverse --key 3 --numeric | head -3 > /tmp/cpu-hungry-pods/txt
+
+Question 12:
+Create a deployment as follows 
+
+    • Name ngnix-random 
+
+    • Exposed via a service ngnix-random 
+
+    • Ensure that the service & pod are accessible via their respective DNS records 
+
+    • The container(s) within any pod(s) running as a part of this deployment should use the ngnix image 
+
+    Next,use the utility nslookup to look up the DNS records of the Service & pod and write the 
+
+    output to optservice.dns and optservice.dns respectively. 
+Ans:
+kubectl create deployment nginx-random --image=nginx
+kubectl scale deployment nginx-random --replicas=3
+kubectl expose deployment nginx-random --type=NodePort --port=8080
+create pod for DNS check
+kubectl run servicecheck --image=busubox:1.28 --command -- sleep -- 1000 
+a) kubectl exec -it servicecheck nslookup nginx-random > /opt/nginx-dev-service-dns
+   #Verify the entry
+   cat /opt/nginx-dev-service-dns
+b) List the pods
+   kubectl get pod -o wide
+   kubectl exec -it servicecheck nslookup 10-32-0-2.default.pod > /opt/nginx-pod-dns
+   #Verify the entry
+   cat /opt/nginx-pod-dns
+   
+Question 13:
+A kubernetes worker node is in state NotReady Investigate why this is the case, and perform any appropriates steps to bring the node to a Ready state   
+ Ans:Explanation
+1. First describe node - kubectl describe node node-name
+2. Try restarting kubelet service - systemctl restart kubelet
+3. Check journel logs.
+4. check /var/log/syslog file manually.
+And search kubelet related log entry. 
+
+Question 14: Skipped
+Configure the kubelet system- managed service (i.e. static pod), on mentioned worker node. details of pod name will be given in exam
+Ans:
+kubectl get nodes -o wide
+kubectl run static-pod --image=nginx --dry-run=client -o wide > static-pod.yaml
+cp static-pod.yaml to /etc/kubernetes/manifests of that node
+kubectl get pods -- To check pod
+
+Question 15: Skipped
+You need to setup k8s cluster of 1 master and 1 worker node using kubeadm tool.
+kubeadm.config file will be given using this file you need to initialized master node. 
+Ans: 
+Execute the below commands in both master and worker node:
+
+$ sudo apt-get update
+$ sudo apt-get install -y kubelet kubeadm kubectl
+$ sudo apt-mark hold kubelet kubeadm kubectl
+Then:
+$kubeadm init --config=configfile.yaml --ignore-preflight-errors all
+
+Question 16:
+Given a partially- functioning Kuberenetes cluster, identify symptoms of failure on the cluster.
+Explanation
+1. ssh to the master node of the broken cluster o Verify the static pod path entry staticPodpath: /etc/kubernetes/manifests in the kubelet config file /var/lib/kubelet/config.yaml
+2. If the above entry is not there or the entry is pointed to staticPodpath: BROKEN then adding/updating the entry staticPodpath: /etc/kubernetes/manifests and save the file.
+3. Restart and enable the kubelet in the master node
+▪ systemctl daemon-reload
+▪ systemctl restart kubelet
+
+Question 17:
+ETCD Backup:
+Take backup of ETCD cluster save it to some file. 
+Ans: 
+ETCDCTL_API=3 etcdctl snapshot save -h
+ETCDCTL_API=3 etcdctl snapshot save --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etcd/kubernetes/pki/etcd/server.key --endpoints=https://127.0.0.1 /tmp/snapshot-pre-boot.db
+
+Question 18:
+Create persistentvolume using hostpath /mnt/data  specification given in question.
+Ans: apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+ 
+Question 19: Skipped
+Need to add init container in given pod specification file, this init container will create some file.
+Ans:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup myservice.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
+  
+Question 20:
+Set the node named worker-node as unavailable and reschedule all the pods running on it.  
+Ans: 
+kubectl drain node01 --ignore-daemonsets --force
+
+Question 21:
+Create a pod as follows 
+    • Name non-persistent-redis 
+    • Container image redis 
+    • Persistent volume with name app-cache 
+    • Mouth path /data/redis 
+    It should launch in the qa namespace and the volume must be persistent. 
+Ans: 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: non-persistent-redis
+  namespace: qa
+spec:
+  containers:
+  - name: redis
+    image: redis
+    volumeMounts:
+    - name: app-cache-mount
+      mountPath: /data/redis
+  volumes:
+  - name: app-cache
+    emptyDir: {}
+
+Question 22:
+Create a Kubernetes secret as follows 
+    • Name super-secret 
+    • Credential mouse 
+    Create a pod named pod-secrets-via-file, using the redis image, which mounts a secret 
+    named super-secret at secrets. 
+    Create a second pod named pod-secrets-via-env, using the redis image, which exports 
+    credential as
+Ans:
+kubectl create secret generic super-secret --from-literal=username=bob --from-literal=password='S!B\*d$zDsb'
+    apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-secrets-via-file
+spec:
+  containers:
+  - name: mypod
+    image: nginx
+    volumeMounts:
+     - name: secret
+       mountPath: "/etc/secret"
+       readOnly: true
+  volumes:
+  - name: secret
+    secret:
+      secretName: super-secret
+      items:
+      - key: username
+        path: mygroup/secrets
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-secrets-via-env
+spec:
+  containers:
+  - name: mypod
+    image: nginx
+    envFrom:
+     - secretRef:
+          name: super-secret
+          
+Question 23:
+Create a single pod with 4 app container
+NGINX+REDIS + MEMCACHED+CONSUL
+Ans: 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kucc4 
+spec:
+  containers:
+  - name: first-container
+    image: nginx
+  - name: second-container
+    image: redis
+  - name: third-container
+    image: memcached
+  - name: fourth-container
+    image: consul
+    
+Question 24:
+Create a deployment with given replicas 6 and store the it in a yaml file    
+Ans: 
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+
+    name: deploy
+
+spec:
+
+   template:
+
+       metadata:
+
+        name: deploy-pod
+
+        labels:
+
+          run: pod
+
+       spec:
+
+         containers:
+
+           - name: deploy-container
+
+             image: nginx
+
+   replicas: 3
+
+   selector:
+
+      matchLabels:
+
+         run: pod
+         
+         
+         
+
+
+
+          
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+ 
+
+
+
+
+
+
