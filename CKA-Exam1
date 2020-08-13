@@ -3,7 +3,7 @@ Taints
 
 List all the nodes in the cluster and check which do not contain any non-scheduling and not-reachable node. 
 Write the output to /opt/nodes.txt
-Ans: kubectl get nodes | grep  Ready -o wide > /opt/nodes.txt
+Ans: kubectl get nodes -o wide | grep Ready  > /opt/nodes.txt
 
 Question 2: 
 Static Pods
@@ -417,6 +417,8 @@ spec:
          
          
          
+ ### Important 
+ kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead
 
 
 
