@@ -1,6 +1,31 @@
-Use JSON PATH query to retrieve the osImages of all the nodes and store it in a file /opt/outputs/nodes_os.txt
-The osImages are under the nodeInfo section under status of each node.
-kubectl get nodes -o=jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/nodes_os.txt
+1) UGet the list of nodes in JSON format and store it in a file at /opt/outputs/nodes-z3444kd9.json
+   kubectl get nodes -o json > /opt/outputs/nodes-z3444kd9.json
 
+2) Use JSON PATH query to retrieve the osImages of all the nodes and store it in a file /opt/outputs/nodes_os_x43kj56.txt
+   kubectl get nodes -o jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/nodes_os_x43kj56.txt
 
+3) 
+a) kubectl top pods | sort --reverse --key 3 --numeric | head -3 > output.txt
+b) kubectl get pv | sort --reverse --key 3 --numeric | head -3
 
+4) Apply the following manifest file within your cluster:
+
+https://github.com/zealvora/myrepo/blob/master/demo-files/pv-sorting.yaml
+List all PVs sorted by the capacity and save the full kubectl output to /opt/my_volumes.txt
+Use kubectl‘s own functionally for sorting the output and do not manipulate it any further
+
+Ans: kubectl get pv sort-by=.spec.capacity.storage > pv-output.txt
+
+5) POD Logging
+
+Apply the following manifest to your K8s cluster:
+
+https://github.com/zealvora/myrepo/blob/master/demo-files/cka_logs.yaml
+
+Monitor the logs for all the containers which are part of the counter2 pod. Extract log lines which have the number 02. Write them to /opt/kplabs-foobar
+
+kubeclt logs <pod-name> --all-containers | grep "02" > output.log
+
+6) 
+
+  
