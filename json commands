@@ -26,6 +26,25 @@ Monitor the logs for all the containers which are part of the counter2 pod. Extr
 
 kubeclt logs <pod-name> --all-containers | grep "02" > output.log
 
-6) 
+6) POD Security Context
+Create a pod named pod-security. The pod should be launched from the busybox image and it should run with the command of ping 127.0.0.1 . The primary process should run with the UID of 1005. 
+The pod should be launched in the namespace of security. Check the logs of the POD and output the log to the file /tmp/pod-security.txt
+ a) create namespace security. 
+   kubectl create namespace security
+ b) create a pod
+   apiVersion: v1
+   kind: Pod
+   metadata:
+      name: pod-security
+   spec:
+       containers:
+       - name: pod-security
+         image: busybox
+         command: ["sh", "-c", " sleep 1h" "ping 127.0.0.1"]
+       securityContext:
+           runAsUser: 1005
+  kubectl create -f pod-security.yaml         
+  kubectl logs -f pod-security > /tmp/pod-security.txt
 
+ 7) 
   
